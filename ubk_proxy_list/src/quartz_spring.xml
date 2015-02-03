@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="startCrawlQuartzJobBean"
+		class="com.unbank.proxy.quartz.StartCrawlQuartzJobBeanQuartzJobBean"
+		autowire="byName">
+	</bean>
+
+
+
+	<!-- 定时检测内容 -->
+	<bean id="startCrawlQuartzJobTask"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 调用的类 -->
+		<property name="targetObject" ref="startCrawlQuartzJobBean">
+		</property>
+		<!-- 调用类中的方法 -->
+		<property name="targetMethod" value="executeInternal">
+		</property>
+	</bean>
+
+
+
+	<!-- 任务触发器 -->
+	<bean id="startCrawlQuartzTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="startCrawlQuartzJobTask" />
+		</property>
+		<property name="cronExpression">
+			<value>0 48/5 * * * ?</value>
+		</property>
+	</bean>
+
+	<!-- 任务调度入口 -->
+
+	<bean lazy-init="false"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="startCrawlQuartzTrigger" />
+			</list>
+		</property>
+	</bean>
+
+</beans>

@@ -18,7 +18,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-public class HttpClientFetcher  extends Fetcher{
+public class HttpClientFetcher implements Fetcher {
 	private RequestConfig requestConfig = RequestConfig.custom()
 			.setSocketTimeout(30000).setConnectTimeout(30000).build();
 	private BasicCookieStore cookieStore;
@@ -26,7 +26,8 @@ public class HttpClientFetcher  extends Fetcher{
 
 	private final String _DEFLAUT_CHARSET = "utf-8";
 
-	public HttpClientFetcher(BasicCookieStore cookieStore, CloseableHttpClient httpClient) {
+	public HttpClientFetcher(BasicCookieStore cookieStore,
+			CloseableHttpClient httpClient) {
 		this.cookieStore = cookieStore;
 		this.httpClient = httpClient;
 	}
@@ -114,8 +115,8 @@ public class HttpClientFetcher  extends Fetcher{
 		return null;
 	}
 
-	public void setProxy(String address, int port) {
-		HttpHost proxy = new HttpHost(address, port);
+	public void setProxy(String address, String port) {
+		HttpHost proxy = new HttpHost(address, Integer.parseInt(port));
 		requestConfig = RequestConfig.custom().setSocketTimeout(30000)
 				.setConnectTimeout(30000).setProxy(proxy).build();
 	}

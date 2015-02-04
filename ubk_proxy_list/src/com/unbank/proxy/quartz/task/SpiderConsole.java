@@ -28,16 +28,16 @@ public class SpiderConsole {
 	public static BasicCookieStore cookieStore = new BasicCookieStore();
 
 	public void inittask() {
-		DesiredCapabilities caps = new DesiredCapabilities();
-		caps.setJavascriptEnabled(true);
-		caps.setCapability(
-				PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-				"phantomjs-1.9.7-windows/phantomjs.exe");
-		WebDriver driver = new PhantomJSDriver(caps);
-		long timeout = 5000;
-		TimeUnit timeUnit = TimeUnit.MILLISECONDS;
-		driver.manage().timeouts().pageLoadTimeout(timeout, timeUnit);
-		PhantomjsFetcher phantomjsFetcher = new PhantomjsFetcher(driver);
+		// DesiredCapabilities caps = new DesiredCapabilities();
+		// caps.setJavascriptEnabled(true);
+		// caps.setCapability(
+		// PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
+		// "phantomjs-1.9.7-windows/phantomjs.exe");
+		// WebDriver driver = new PhantomJSDriver(caps);
+		// long timeout = 5000;
+		// TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+		// driver.manage().timeouts().pageLoadTimeout(timeout, timeUnit);
+		PhantomjsFetcher phantomjsFetcher = new PhantomjsFetcher();
 
 		List<IpEntity> ipEntities = new SpysProxyDetailPaser()
 				.getProxyIpEntity(phantomjsFetcher);
@@ -49,8 +49,7 @@ public class SpiderConsole {
 		String myip = fetcher.get("http://www.ip138.com/ip2city.asp", "gbk");
 		List<IpEntity> availableIps = new ArrayList<IpEntity>();
 		for (IpEntity ipEntity : ipEntities) {
-			fetcher.setProxy(ipEntity.getIp(),
-					Integer.parseInt(ipEntity.getPort()));
+			fetcher.setProxy(ipEntity.getIp(), ipEntity.getPort());
 			String html = fetcher
 					.get("http://www.ip138.com/ip2city.asp", "gbk");
 			if (myip.equals(html)) {
@@ -62,7 +61,7 @@ public class SpiderConsole {
 			System.out.println(ipEntity.getIp());
 			System.out.println(ipEntity.getPort());
 		}
-		driver.quit();
+		phantomjsFetcher.closeDriver();
 	}
 
 }

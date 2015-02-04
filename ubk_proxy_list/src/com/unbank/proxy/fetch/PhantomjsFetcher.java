@@ -1,25 +1,38 @@
 package com.unbank.proxy.fetch;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class PhantomjsFetcher extends Fetcher {
+public class PhantomjsFetcher implements Fetcher {
 
 	private static Log logger = LogFactory.getLog(PhantomjsFetcher.class);
 
-	public WebDriver driver;
+	private static WebDriver driver;
 
-	public PhantomjsFetcher(WebDriver driver) {
-		this.driver = driver;
+	public PhantomjsFetcher() {
+		if (driver == null) {
+			DesiredCapabilities caps = new DesiredCapabilities();
+			caps.setJavascriptEnabled(true);
+			caps.setCapability(
+					PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
+					"phantomjs-1.9.7-windows/phantomjs.exe");
+			driver = new PhantomJSDriver(caps);
+			long timeout = 5000;
+			TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+			driver.manage().timeouts().pageLoadTimeout(timeout, timeUnit);
+		}
 	}
-
-	
 
 	public String get(String url) {
 		String html = null;
@@ -65,21 +78,32 @@ public class PhantomjsFetcher extends Fetcher {
 		}
 	}
 
-
-
 	public String get(String url, String string) {
-	
+
 		return null;
 	}
 
-
-
-	public void setProxy(String string, int parseInt) {
-
-		String PROXY = "115.231.96.120:80";
+	public void setProxy(String proxyIp, String proxyPort) {
+		closeDriver();
+		String PROXY = proxyIp + ":" + proxyPort;
 		org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
 		proxy.setHttpProxy(PROXY).setFtpProxy(PROXY).setSslProxy(PROXY);
-//		caps.setCapability(CapabilityType.PROXY, proxy);
+		DesiredCapabilities caps = new DesiredCapabilities();
+		caps.setJavascriptEnabled(true);
+		caps.setCapability(CapabilityType.PROXY, proxy);
+		caps.setCapability(
+				PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
+				"phantomjs-1.9.7-windows/phantomjs.exe");
+		driver = new PhantomJSDriver(caps);
+		long timeout = 5000;
+		TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+		driver.manage().timeouts().pageLoadTimeout(timeout, timeUnit);
 	}
 
+	public void closeDriver() {
+		if (driver != null) {
+			driver.quit();
+		}
+
+	};
 }

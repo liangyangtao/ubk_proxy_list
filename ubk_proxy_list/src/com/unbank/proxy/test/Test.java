@@ -1,16 +1,14 @@
 package com.unbank.proxy.test;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import com.unbank.proxy.fetch.Fetcher;
 import com.unbank.proxy.fetch.HttpClientBuilder;
@@ -36,11 +34,11 @@ public class Test {
 		// driver.manage().timeouts().pageLoadTimeout(timeout, timeUnit);
 		PhantomjsFetcher phantomjsFetcher = new PhantomjsFetcher();
 		// ////////////////////////////////////////////////////////////////////
-		// HttpClientBuilder httpClientBuilder = new HttpClientBuilder(false,
-		// poolingHttpClientConnectionManager, cookieStore);
-		// CloseableHttpClient httpClient = httpClientBuilder.getHttpClient();
-		// HttpClientFetcher fetcher = new HttpClientFetcher(cookieStore,
-		// httpClient);
+		HttpClientBuilder httpClientBuilder = new HttpClientBuilder(false,
+				poolingHttpClientConnectionManager, cookieStore);
+		CloseableHttpClient httpClient = httpClientBuilder.getHttpClient();
+		HttpClientFetcher fetcher = new HttpClientFetcher(cookieStore,
+				httpClient);
 		// ////////////////////////////////////////////////////////////////////////
 		// List<IpEntity> ipEntities = new SpysProxyDetailPaser()
 		// .getProxyIpEntity(phantomjsFetcher);
@@ -57,8 +55,21 @@ public class Test {
 		//
 		// }
 
+		// String url = "http://www.mszxyh.com/peweb/indexdb.do";
+		// String html = fetcher.get(url);
+		String url = "http://www.mszxyh.com/peweb/kjPage.do?id=ryb";
+		String html = fetcher.get(url);
+		Document document = Jsoup.parse(html, url);
+		Elements iframeElemets = document.select("iframe");
+		for (Element element : iframeElemets) {
+			String href = element.absUrl("src");
+			System.out.println(href);
+			String tempHtml = phantomjsFetcher.get(href);
+			element.appendChild(Jsoup.parse(tempHtml));
+		}
+		System.out.println(document);
 		// httpclientGetHtml(fetcher);
-		phantomjsGetHtml(phantomjsFetcher);
+		// phantomjsGetHtml(phantomjsFetcher);
 		phantomjsFetcher.closeDriver();
 		//
 		// new SpiderConsole().inittask2();

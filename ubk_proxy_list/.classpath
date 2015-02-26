@@ -93,5 +93,8 @@
 	<classpathentry kind="lib" path="lib/xalan-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl-2.10.0.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis-1.4.01.jar"/>
+	<classpathentry kind="lib" path="lib/cpdetector_1.0.10.jar"/>
+	<classpathentry kind="lib" path="lib/antlr-2.7.2.jar"/>
+	<classpathentry kind="lib" path="lib/chardet-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

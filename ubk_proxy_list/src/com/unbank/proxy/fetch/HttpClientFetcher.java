@@ -1,9 +1,19 @@
 package com.unbank.proxy.fetch;
 
+import info.monitorenter.cpdetector.io.ASCIIDetector;
+import info.monitorenter.cpdetector.io.ByteOrderMarkDetector;
+import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
+import info.monitorenter.cpdetector.io.JChardetFacade;
+import info.monitorenter.cpdetector.io.ParsingDetector;
+import info.monitorenter.cpdetector.io.UnicodeDetector;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -56,26 +66,59 @@ public class HttpClientFetcher implements Fetcher {
 	public String get(String url, Map<String, String> headers, String charset) {
 		HttpClientContext context = HttpClientContext.create();
 		context.setCookieStore(cookieStore);
-		String useCharset = charset;
-		if (charset == null) {
-			useCharset = _DEFLAUT_CHARSET;
-		}
 		HttpGet httpGet = new HttpGet(url);
 		fillHeader(url, httpGet);
 		httpGet.setConfig(requestConfig);
 		try {
 			CloseableHttpResponse response = httpClient.execute(httpGet,
 					context);
+			HttpEntity entity = response.getEntity();
+			InputStream inputStream = new ByteArrayInputStream(
+					EntityUtils.toByteArray(entity));
+			CodepageDetectorProxy codepageDetectorProxy = CodepageDetectorProxy
+					.getInstance();
+			codepageDetectorProxy.add(JChardetFacade.getInstance());
+			codepageDetectorProxy.add(ASCIIDetector.getInstance());
+			codepageDetectorProxy.add(UnicodeDetector.getInstance());
+			codepageDetectorProxy.add(new ParsingDetector(false));
+			codepageDetectorProxy.add(new ByteOrderMarkDetector());
+			java.nio.charset.Charset useCharset = null;
 			try {
-				HttpEntity entity = response.getEntity();
-				return EntityUtils.toString(entity, useCharset);
+
+				useCharset = codepageDetectorProxy.detectCodepage(inputStream,
+						inputStream.available() / 2);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			try {
+				String result = IOUtils
+						.toString(inputStream, useCharset.name());
+				return result;
+			} catch (Exception e) {
+				e.printStackTrace();
 			} finally {
 				response.close();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			httpGet.abort();
 		}
 		return null;
+	}
+
+	public String inputStream2String(InputStream in, String useCharset) {
+		StringBuffer out = new StringBuffer();
+		try {
+
+			byte[] b = new byte[4096];
+			for (int n; (n = in.read(b)) != -1;) {
+				out.append(new String(b, 0, n));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return out.toString();
 	}
 
 	public String post(String url, Map<String, String> params,
@@ -86,8 +129,9 @@ public class HttpClientFetcher implements Fetcher {
 		if (charset == null) {
 			useCharset = _DEFLAUT_CHARSET;
 		}
+		HttpPost httpPost = new HttpPost(url);
 		try {
-			HttpPost httpPost = new HttpPost(url);
+
 			if (headers != null) {
 				for (String key : headers.keySet()) {
 					httpPost.setHeader(key, headers.get(key));
@@ -111,6 +155,8 @@ public class HttpClientFetcher implements Fetcher {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			httpPost.abort();
 		}
 		return null;
 	}
